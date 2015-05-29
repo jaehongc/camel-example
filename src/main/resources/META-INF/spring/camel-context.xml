@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring
+       http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.brm.web.service" />
+
+    <bean id="gson"
+          class="org.apache.camel.component.gson.GsonDataFormat">
+        <property name="unmarshalType" value="java.util.HashMap" />
+        <property name="serializeNulls" value="true" />
+    </bean>
+
+    <bean id="jackson"
+          class="org.apache.camel.component.jackson.JacksonDataFormat">
+        <property name="unmarshalType" value="java.util.HashMap" />
+    </bean>
+
+    <bean id="twitter" class="org.apache.camel.component.twitter.TwitterComponent">
+        <property name="consumerKey" value="ZtwhRHS6rEXhzRwfjRYWGbP10" />
+        <property name="consumerSecret" value="T0TQlZBswFT1pJQA4A4qJ28DCJXelJM6jGHlYnRPTlzBeJd9lg" />
+        <property name="accessToken" value="1316066990-YjGdGwfFpAVrPvUX85Y9x3kqLvibGTf6nggxhUZ" />
+        <property name="accessTokenSecret" value="hTZ09cnPJQjCCmMzMxSCR8okQ9tdPc6foVBPhgDr6VH0E" />
+    </bean>
+
+    <bean id="dispatcher" class="com.brm.web.MessageDispatcher" />
+
+
+    <camel:camelContext xmlns="http://camel.apache.org/schema/spring">
+        <!-- here is a sample which processes the input files
+             (leaving them in place - see the 'noop' flag)
+             then performs content based routing on the message using XPath -->
+        <camel:route>
+            <camel:from uri="netty-http:http://0.0.0.0:8080?matchOnUriPrefix=true"/>
+            <camel:unmarshal ref="gson"/>
+            <camel:to uri="bean:dispatcher?method=dispatch"/>
+            <camel:marshal ref="gson"/>
+        </camel:route>
+
+        <camel:route id="Twitter">
+            <camel:from uri="direct:twitter" />
+            <camel:to uri="twitter://timeline/user" />
+        </camel:route>
+
+        <!--
+
+      <camel:route>
+        <camel:from uri="file:src/data?noop=true"/>
+        <camel:choice>
+          <camel:when>
+            <camel:xpath>/person/city = 'London'</camel:xpath>
+            <camel:log message="UK message"/>
+            <camel:to uri="file:target/messages/uk"/>
+          </camel:when>
+          <camel:otherwise>
+            <camel:log message="Other message"/>
+            <camel:to uri="file:target/messages/others"/>
+          </camel:otherwise>
+        </camel:choice>
+      </camel:route>
+
+  -->
+  </camel:camelContext>
+
+</beans>
