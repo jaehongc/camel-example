@@ -34,21 +34,36 @@
 
     <bean id="dispatcher" class="com.brm.web.MessageDispatcher" />
 
+    <bean id="myProcessor" class="com.brm.web.processor.MyProcessor" />
 
     <camel:camelContext xmlns="http://camel.apache.org/schema/spring">
-        <!-- here is a sample which processes the input files
-             (leaving them in place - see the 'noop' flag)
-             then performs content based routing on the message using XPath -->
+
+        <camel:threadPool id="oneThreadOnly"
+                          poolSize="1"
+                          threadName="JustMeDoingTheTapping"
+                          maxPoolSize="1"
+                          maxQueueSize="100"/>
+
         <camel:route>
             <camel:from uri="netty-http:http://0.0.0.0:8080?matchOnUriPrefix=true"/>
+            <wireTap uri="direct:tapped"/>
             <camel:unmarshal ref="gson"/>
+            <process ref="myProcessor" />
             <camel:to uri="bean:dispatcher?method=dispatch"/>
+            <process ref="myProcessor" />
             <camel:marshal ref="gson"/>
+            <process ref="myProcessor" />
+            <wireTap uri="direct:tapped"/>
         </camel:route>
 
         <camel:route id="Twitter">
             <camel:from uri="direct:twitter" />
             <camel:to uri="twitter://timeline/user" />
+        </camel:route>
+
+        <camel:route id="Tapped">
+            <camel:from uri="direct:tapped"/>
+            <camel:to uri="stream:out" />
         </camel:route>
 
         <!--

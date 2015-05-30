@@ -11,7 +11,7 @@ import java.util.Map;
 @Service("/TestService")
 public class TestService implements Performer {
 
-    @Produce(uri="direct:twitter")
+    @Produce(uri="direct:tapped")
     ProducerTemplate producer;
 
     @Override
